@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pl"><head><script id="aura-preview-performance-controller">
+(function() {
+if (window.__auraPreviewPerformanceController) return;
+const nativeRequestAnimationFrame = window.requestAnimationFrame
+? window.requestAnimationFrame.bind(window)
+: function(callback) { return window.setTimeout(function() { callback(Date.now()); }, 16); };
+const nativeCancelAnimationFrame = window.cancelAnimationFrame
+? window.cancelAnimationFrame.bind(window)
+: window.clearTimeout.bind(window);
+const nativeSetInterval = window.setInterval.bind(window);
+let paused = false;
+let nextFrameId = 1;
+const frameRecords = new Map();
+const pausedFrameCallbacks = new Map();
+const style = document.createElement('style');
+style.id = 'aura-preview-performance-style';
+style.textContent = [
+'html[data-aura-preview-paused="true"] *,',
+'html[data-aura-preview-paused="true"] *::before,',
+'html[data-aura-preview-paused="true"] *::after {',
+'  animation-play-state: paused !important;',
+'  transition-duration: 0s !important;',
+'  scroll-behavior: auto !important;',
+'}'
+].join('\n');
+document.head.appendChild(style);
+window.requestAnimationFrame = function(callback) {
+const frameId = nextFrameId++;
+if (paused) {
+pausedFrameCallbacks.set(frameId, callback);
+frameRecords.set(frameId, { paused: true });
+return frameId;
+}
+const nativeFrameId = nativeRequestAnimationFrame(function(timestamp) {
+frameRecords.delete(frameId);
+callback(timestamp);
+});
+frameRecords.set(frameId, { nativeFrameId: nativeFrameId });
+return frameId;
+};
+window.cancelAnimationFrame = function(frameId) {
+const record = frameRecords.get(frameId);
+pausedFrameCallbacks.delete(frameId);
+if (record && typeof record.nativeFrameId !== 'undefined') {
+nativeCancelAnimationFrame(record.nativeFrameId);
+}
+frameRecords.delete(frameId);
+};
+window.setInterval = function(callback, delay) {
+const args = Array.prototype.slice.call(arguments, 2);
+return nativeSetInterval(function() {
+if (paused) return;
+callback.apply(this, args);
+}, delay);
+};
+const flushPausedFrames = function() {
+const callbacks = Array.from(pausedFrameCallbacks.entries());
+pausedFrameCallbacks.clear();
+callbacks.forEach(function(entry) {
+const frameId = entry[0];
+const callback = entry[1];
+const nativeFrameId = nativeRequestAnimationFrame(function(timestamp) {
+frameRecords.delete(frameId);
+callback(timestamp);
+});
+frameRecords.set(frameId, { nativeFrameId: nativeFrameId });
+});
+};
+const setPaused = function(nextPaused) {
+const shouldPause = Boolean(nextPaused);
+if (paused === shouldPause) return;
+paused = shouldPause;
+document.documentElement.toggleAttribute('data-aura-preview-paused', paused);
+if (!paused) {
+flushPausedFrames();
+}
+};
+window.__auraPreviewPerformanceController = {
+setPaused: setPaused,
+get paused() {
+return paused;
+}
+};
+window.addEventListener('message', function(event) {
+if (event.source !== window.parent) return;
+if (!event.data || event.data.type !== 'aura-preview-performance-mode') return;
+setPaused(event.data.paused);
+});
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Niestety, ta oferta wygasła</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body { font-family: 'Inter', sans-serif; }
+</style>
+<style>
+footer, .footer, #footer { display: none !important; }
+</style>
+<!-- Apresly -->
+<script type="text/javascript" data-cfasync="false" data-noptimize="1" data-no-minify="true" data-wpfc-render="false" nowprocket="">
+var apreslyUrl = btoa(encodeURIComponent(location.href));var apreslyParentUrlValue;try {apreslyParentUrlValue = window.parent.location.href;} catch(err) {if(err.name === "SecurityError") {apreslyParentUrlValue = document.referrer;}} var apreslyParentUrl = (parent !== window) ? ("/" + btoa(encodeURIComponent(apreslyParentUrlValue))) : "";(function() {var apreslyScript = document.createElement("script");apreslyScript.type = "text/javascript";apreslyScript.async = true;apreslyScript.setAttribute("data-scriptid", "apresly-tracking-code");apreslyScript.src = "https://app.apresly.com/api/cpa/v1/cpa?identifyToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRHdWlkIjoiNjk1ZTg2ZmEtMWVlZC00MzJiLThkOTItNTQxMGY4YzU1ZDMzIiwiaWF0IjoxNzc4NTA4MzAxfQ.WC3AVxNqMbaUNf_ncQKdDWhF1nAcvN4_Ol2c0pvpFaY&pageLocation="+apreslyUrl+"&parentPageLocation="+apreslyParentUrl;var scriptBegin = document.getElementsByTagName("script")[0];scriptBegin.parentNode.insertBefore(apreslyScript, scriptBegin);})();
+</script>
+<!-- End Apresly --></head>
+  <body class="bg-neutral-900 text-white min-h-screen selection:bg-yellow-400 selection:text-neutral-900 flex flex-col justify-center relative overflow-x-hidden overflow-y-hidden antialiased">
+    <!-- Decorative Background Elements -->
+    <div class="absolute inset-0 bg-gradient-to-br from-red-800 to-neutral-900 -z-10"></div>
+    <div class="absolute top-0 right-0 -mt-32 -mr-32 w-96 h-96 bg-red-600 rounded-full blur-[100px] opacity-40 pointer-events-none -z-10"></div>
+    <div class="absolute bottom-0 left-0 -mb-32 -ml-32 w-96 h-96 bg-black rounded-full blur-[120px] opacity-40 pointer-events-none -z-10"></div>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 lg:py-24 flex flex-col items-center w-full min-h-screen gap-10">
+      <!-- Left Content Section -->
+      <div class="contents">
+        <div class="order-1 flex flex-col items-center text-center space-y-8 w-full max-w-4xl mx-auto">
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight uppercase text-white drop-shadow-sm text-center mx-auto">
+            Niestety,
+            <br class="hidden md:block">
+            <span class="text-yellow-400">ta oferta</span>
+            <br class="hidden md:block">
+            już wygasła.
+          </h1>
+
+          <div class="h-2 w-24 bg-yellow-400 rounded-full"></div>
+        </div>
+
+        <!-- Value Proposition Panel -->
+      </div>
+
+      <!-- Right Visual & CTA Section -->
+      <div class="contents">
+        <div class="hidden">?</div>
+
+        <!-- Stylized Screen Mockup -->
+        <div class="order-2 w-full max-w-4xl bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden relative">
+          <div id="video-lock-container" class="w-full aspect-video bg-neutral-900 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center opacity-40" style=""></div>
+            <div class="absolute inset-0 bg-neutral-950/70 backdrop-blur-md"></div>
+            <div class="relative z-10 max-w-sm w-full space-y-4">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-400 text-neutral-950 rounded-2xl shadow-lg mb-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+                </svg>
+              </div>
+              <h3 class="text-xl md:text-2xl font-bold tracking-tight uppercase text-white">
+                Zajrzyj na Instagram
+              </h3>
+              <p class="text-neutral-300 font-medium text-sm">
+                Wrzucam tam różne ciekawe oferty od czasu do czasu.
+              </p>
+              <a href="https://www.instagram.com/bartek.devyourweb/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 w-full mt-4 px-6 py-3 bg-yellow-400 text-neutral-950 font-bold text-base rounded-xl shadow-[0_0_20px_rgba(250,204,21,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] transition-all hover:-translate-y-0.5 uppercase tracking-tight">
+                Przejdź na profil
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary CTA -->
+      </div>
+    </main>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  
+</body></html>
